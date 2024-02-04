@@ -1,0 +1,6 @@
+# spawn-position: The coordinates of the spawn position
+spawn-position:
+  spawn-x: 0.5
+  spawn-y: 0
+  spawn-z: 0.5
+  spawn-world: world

@@ -1,4 +1,9 @@
-name: HungerGamesPlus2
+name: HungerGamesPlus
 version: '${project.version}'
-main: hgplus.hungergamesplus2.HungerGamesPlus2
-api-version: '1.20'
+main: hgplus.HungerGamesPlus2
+api-version: 1.20
+authors: [ coolspee, Jbeast291 ]
+commands:
+  hgplus:
+    description: Hunger Games Plus Command
+    permission: hungergamesplus.admin
