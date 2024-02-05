@@ -61,40 +61,46 @@ public class corelogic {
 
     public void ClearAndRefilChests() {
         FileConfiguration config = HungerGamesPlus2.getInstance().getConfig();
-        Collection<ArmorStand> armorStand = Bukkit.getWorld(config.getString("lobby-spawn-position.spawn-world")).getEntitiesByClass(ArmorStand.class);
-        for(ArmorStand currentArmorStand : armorStand){
+        Collection<ArmorStand> armorStand = Bukkit.getWorld(config.getString("start-position.spawn-world")).getEntitiesByClass(ArmorStand.class);
+
+        for(ArmorStand currentArmorStand : armorStand) {
             Block chestBlock = currentArmorStand.getWorld().getBlockAt(currentArmorStand.getLocation());
             chestBlock.setType(Material.CHEST);
             Chest chest = (Chest) chestBlock.getState();
-            chest.getSnapshotInventory().clear();
+            chest.getBlockInventory().clear();
+        }
+
+        for(ArmorStand currentArmorStand : armorStand){
+            Chest chest = (Chest) currentArmorStand.getWorld().getBlockAt(currentArmorStand.getLocation()).getState();
             if(currentArmorStand.getScoreboardTags().contains("Common")){
                 chest.setLootTable(Bukkit.getServer().getLootTable(new NamespacedKey("hungergamesloottables","commonbox")));
-                chest.setCustomName("§l§0Common Crate");
+                chest.setCustomName("§0§lCommon Crate");
             }
             else if(currentArmorStand.getScoreboardTags().contains("Uncommon")){
                 chest.setLootTable(Bukkit.getServer().getLootTable(new NamespacedKey("hungergamesloottables","uncommon")));
-                chest.setCustomName("§l§aUncommon Crate");
+                chest.setCustomName("§a§lUncommon Crate");
             }
             else if(currentArmorStand.getScoreboardTags().contains("Rare")){
                 chest.setLootTable(Bukkit.getServer().getLootTable(new NamespacedKey("hungergamesloottables","rarefoodbox")));
-                chest.setCustomName("§l§9Food Crate");
+                chest.setCustomName("§5§lFood Crate");
             }
             else if(currentArmorStand.getScoreboardTags().contains("Epic")){
                 chest.setLootTable(Bukkit.getServer().getLootTable(new NamespacedKey("hungergamesloottables","epicbox")));
-                chest.setCustomName("§l§bEpic Crate");
+                chest.setCustomName("§b§lEpic Crate");
             }
             else if(currentArmorStand.getScoreboardTags().contains("Legendary")){
                 chest.setLootTable(Bukkit.getServer().getLootTable(new NamespacedKey("hungergamesloottables","legendarybox")));
-                chest.setCustomName("§l§eLegendary Crate");
+                chest.setCustomName("§e§lLegendary Crate");
             }
             chest.update(true);
+            //chest.getBlockInventory().clear();//THIS HAST TO BE AFTER THE UPDATE FOR SOME REASON FML OMG
         }
     }
 
 
 
 
-    private void addWorldborderEvent(int delay, double size, int time) {
+    private void addWorldborderEvent(int delay, double size, int time) { //delay is how long before it this is called, size is blocks for border, time is how long it takes to get to that size
         try {
             BukkitTask task = new BukkitRunnable() {
                 @Override
@@ -102,14 +108,14 @@ public class corelogic {
                     gameEventTaskIDs.remove(gameEventTaskIDs.indexOf(getTaskId()));
                     FileConfiguration config = HungerGamesPlus2.getInstance().getConfig();
                     Bukkit.getWorld(config.getString("lobby-spawn-position.spawn-world")).getWorldBorder().setSize(size, time);
-                    Bukkit.broadcastMessage(ChatColor.YELLOW + "" + ChatColor.BOLD + "World Border shrinking to " + ChatColor.UNDERLINE + size + ChatColor.YELLOW + ChatColor.BOLD + " blocks over " + ChatColor.UNDERLINE + time + ChatColor.YELLOW + ChatColor.BOLD + " seconds.");
+                    Bukkit.broadcastMessage("§7[§3HGPlus§7]§e§l World Border shrinking to §n" + size + "§n§l blocks over §n" + time + "§n§l seconds.");
                 }
             }.runTaskLater(HungerGamesPlus2.getInstance(), delay);
             gameEventTaskIDs.add(task.getTaskId());
-            Bukkit.getLogger().info("Added " + task.getTaskId() + " to task ids. New size: " + gameEventTaskIDs.size());
+            Bukkit.getLogger().info("[HGPlus] Added " + task.getTaskId() + " to task ids. New size: " + gameEventTaskIDs.size());
         } catch (UnsupportedOperationException e) {
             // Log a warning message
-            Bukkit.getLogger().warning("Failed to schedule game start task: " + e.getMessage());
+            Bukkit.getLogger().warning("[HGPlus] Failed to schedule game start task: " + e.getMessage());
         }
     }
 
@@ -240,6 +246,10 @@ public class corelogic {
         startCountdown = 10;
         bossBar.setVisible(true);
 
+        Bukkit.broadcastMessage("§7[§3HGPlus§7]§f Refilling Chests...");
+        ClearAndRefilChests();
+        Bukkit.broadcastMessage("§7[§3HGPlus§7]§f Chests Refilled!");
+
         activePlayers.forEach(pUUID -> {
 
             Player player = Bukkit.getPlayer(pUUID);
@@ -249,9 +259,7 @@ public class corelogic {
             }
 
             player.setGameMode(GameMode.SURVIVAL);
-
             player.teleportAsync(getSpawnLocation());
-
             player.getInventory().clear();
             player.getEquipment().clear();
             player.setHealth(20);
@@ -266,7 +274,7 @@ public class corelogic {
         BukkitRunnable task = new BukkitRunnable() {
             @Override
             public void run() {
-                bossBar.setTitle(ChatColor.YELLOW + "" + ChatColor.BOLD + "Starting in: " + ChatColor.WHITE + ChatColor.BOLD + startCountdown);
+                bossBar.setTitle("§7[§3HGPlus§7]§f Starting in: §6" + startCountdown);
                 if (startCountdown == 0) {
                     startupTask = -1;
                     cancel();
@@ -278,18 +286,16 @@ public class corelogic {
                         player.getInventory().clear();
                         player.getEquipment().clear();
                         player.getEquipment().setChestplate(new ItemStack(Material.ELYTRA));
-                        player.sendMessage(ChatColor.GREEN + "" + ChatColor.BOLD + "Your elytra has been automatically equipped!");
+                        player.sendMessage("§7[§3HGPlus§7]§f Your §aelytra§f has been automatically equipped!");
                         player.setHealth(20);
                         player.setFoodLevel(20);
-                        player.setGliding(true);
                         player.teleportAsync(getStartLocation());
-
                     });
                     bossBar.setProgress(Double.valueOf(initialPlayers.size()) / Double.valueOf(activePlayers.size()));
-                    bossBar.setTitle(ChatColor.YELLOW + "" + ChatColor.BOLD + "Players Remaining: " + String.valueOf(activePlayers.size()));
+                    bossBar.setTitle("§7[§3HGPlus§7]§f Players Remaining: §6" + String.valueOf(activePlayers.size()));
 
-                    addWorldborderEvent(200, 90, 50);
-                    addWorldborderEvent(400, 75, 50);
+                    addWorldborderEvent(2400, 150, 60);
+                    addWorldborderEvent(4800, 20, 60);
 
                     // ADD GLOW TO ALL PLAYERS AFTER CERTAIN AMOUNT OF TIME (OPTIONAL)
                     try {
@@ -297,7 +303,7 @@ public class corelogic {
                             @Override
                             public void run() {
                                 gameEventTaskIDs.remove(gameEventTaskIDs.indexOf(getTaskId()));
-                                Bukkit.broadcastMessage("Applied glow effect to all players");
+                                Bukkit.broadcastMessage("§7[§3HGPlus§7]§f Applied glow effect to all players");
                                 activePlayers.forEach(pUUID -> {
                                     Player player = Bukkit.getPlayer(pUUID);
                                     player.setGlowing(true);
@@ -309,7 +315,7 @@ public class corelogic {
                         Bukkit.getLogger().info("Added " + task.getTaskId() + " to task ids. New size: " + gameEventTaskIDs.size());
                     } catch (UnsupportedOperationException e) {
                         // Log a warning message
-                        Bukkit.getLogger().warning("Failed to schedule game start task: " + e.getMessage());
+                        Bukkit.getLogger().warning("§7[§3HGPlus§7]§c Failed to schedule game start task: " + e.getMessage());
                     }
 
 
@@ -328,15 +334,13 @@ public class corelogic {
             startupTask = task.getTaskId();
         } catch (UnsupportedOperationException e) {
             // Log a warning message
-            Bukkit.getLogger().warning("Failed to schedule game start task: " + e.getMessage());
+            Bukkit.getLogger().warning("§7[§3HGPlus§7]§c Failed to schedule game start task: " + e.getMessage());
         }
     }
 
     public void removePlayerFromEvent(UUID pUUID, UUID killerUUID) {
         if (!activePlayers.contains(pUUID)) return;
-
         Player player = Bukkit.getPlayer(pUUID);
-
         Player killer;
 
         if (killerUUID != null) {
@@ -347,6 +351,7 @@ public class corelogic {
 
         activePlayers.remove(pUUID);
         activePlayersBeforeLanding.remove(pUUID);
+
         player.setGlowing(false);
 
         Player winner = Bukkit.getPlayer(activePlayers.get(0));
@@ -359,26 +364,18 @@ public class corelogic {
 
             if (Bukkit.getOnlinePlayers().contains(player)) {
                 player.setGameMode(GameMode.SPECTATOR);
-
-//                                        if(player.isDead()) {
-//                            player.spigot().respawn();
-//                        }
-//                        player.teleport(tpSpot);
-
                 BukkitRunnable task = new BukkitRunnable() {
                     @Override
                     public void run() {
                         if (player.isDead()) {
                             player.spigot().respawn();
                         }
-                        player.teleport(tpSpot);
-
-
+                        player.teleportAsync(tpSpot);
                     }
                 };
 
                 try {
-                    task.runTaskLater(HungerGamesPlus2.getInstance(), 20);
+                    task.runTaskLater(HungerGamesPlus2.getInstance(), 2);
                 } catch (UnsupportedOperationException e) {
                     // Log a warning message
                     Bukkit.getLogger().warning("Failed to schedule game start task: " + e.getMessage());
@@ -386,20 +383,20 @@ public class corelogic {
             }
 
             if (killer == null) {
-                Bukkit.broadcastMessage(ChatColor.RED + "" + ChatColor.BOLD + player.getName() + " was eliminated!");
+                Bukkit.broadcastMessage("§7[§3HGPlus§7]§c§l " + player.getName() + "§f was eliminated!");
             } else {
-                Bukkit.broadcastMessage(ChatColor.RED + "" + ChatColor.BOLD + player.getName() + " was eliminated by " + killer.getName() + "!");
+                Bukkit.broadcastMessage("§7[§3HGPlus§7]§c§l " + player.getName() + "§f was eliminated by §c§l" + killer.getName() + "§f!");
             }
 
-            Bukkit.broadcastMessage("Game over! The winner is " + winner.getName() + "!");
+            Bukkit.broadcastMessage("§7[§3HGPlus§7]§f Game over! The winner is §6" + winner.getName() + "§f!");
             EndGame();
         } else {
             bossBar.setTitle(ChatColor.YELLOW + "" + ChatColor.BOLD + "Players Remaining: " + String.valueOf(activePlayers.size()));
 
             if (killer == null) {
-                Bukkit.broadcastMessage(ChatColor.RED + "" + ChatColor.BOLD + player.getName() + " was eliminated! " + activePlayers.size() + " players remaining!");
+                Bukkit.broadcastMessage("§7[§3HGPlus§7]§c§l " + player.getName() + "§f was eliminated! §c§l" + activePlayers.size() + "§f players remaining!");
             } else {
-                Bukkit.broadcastMessage(ChatColor.RED + "" + ChatColor.BOLD + player.getName() + " was eliminated by " + killer.getName() + "! " + activePlayers.size() + " players remaining!");
+                Bukkit.broadcastMessage("§7[§3HGPlus§7]§c§l " + player.getName() + "§f was eliminated by §c§l" + killer.getName() + "§f! §c§l" + activePlayers.size() + "§f players remaining!");
             }
 
         }
