@@ -1,6 +1,12 @@
-# spawn-position: The coordinates of the spawn position
-spawn-position:
+# spawn-position: The coordinates of the lobby position
+lobby-spawn-position:
   spawn-x: 0.5
   spawn-y: 0
   spawn-z: 0.5
   spawn-world: world
+  # spawn-position: The coordinates of the start position (where players are moved when the game starts)
+start-position:
+  spawn-world: world
+  spawn-x: -174.5
+  spawn-y: 287.0
+  spawn-z: 285.5

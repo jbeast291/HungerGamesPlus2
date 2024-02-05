@@ -41,13 +41,27 @@ public class corelogic {
 
     private Location getSpawnLocation() {
         FileConfiguration config = HungerGamesPlus2.getInstance().getConfig();
-        Location spawnLocation = new Location(Bukkit.getWorld(config.getString("spawn-position.spawn-world")), config.getDouble("spawn-position.spawn-x"), config.getDouble("spawn-position.spawn-y"), config.getDouble("spawn-position.spawn-z"));
+        Location spawnLocation = new Location(Bukkit.getWorld(
+                config.getString("lobby-spawn-position.spawn-world")),
+                config.getDouble("lobby-spawn-position.spawn-x"),
+                config.getDouble("lobby-spawn-position.spawn-y"),
+                config.getDouble("lobby-spawn-position.spawn-z"));
 
         return spawnLocation;
     }
+    private Location getStartLocation() {
+        FileConfiguration config = HungerGamesPlus2.getInstance().getConfig();
+        Location startLocation = new Location(Bukkit.getWorld(config.getString("start-position.spawn-world")),
+                config.getDouble("start-position.spawn-x"),
+                config.getDouble("start-position.spawn-y"),
+                config.getDouble("start-position.spawn-z"));
+
+        return startLocation;
+    }
+
     public void ClearAndRefilChests() {
         FileConfiguration config = HungerGamesPlus2.getInstance().getConfig();
-        Collection<ArmorStand> armorStand = Bukkit.getWorld(config.getString("spawn-position.spawn-world")).getEntitiesByClass(ArmorStand.class);
+        Collection<ArmorStand> armorStand = Bukkit.getWorld(config.getString("lobby-spawn-position.spawn-world")).getEntitiesByClass(ArmorStand.class);
         for(ArmorStand currentArmorStand : armorStand){
             Block chestBlock = currentArmorStand.getWorld().getBlockAt(currentArmorStand.getLocation());
             chestBlock.setType(Material.CHEST);
@@ -87,7 +101,7 @@ public class corelogic {
                 public void run() {
                     gameEventTaskIDs.remove(gameEventTaskIDs.indexOf(getTaskId()));
                     FileConfiguration config = HungerGamesPlus2.getInstance().getConfig();
-                    Bukkit.getWorld(config.getString("spawn-position.spawn-world")).getWorldBorder().setSize(size, time);
+                    Bukkit.getWorld(config.getString("lobby-spawn-position.spawn-world")).getWorldBorder().setSize(size, time);
                     Bukkit.broadcastMessage(ChatColor.YELLOW + "" + ChatColor.BOLD + "World Border shrinking to " + ChatColor.UNDERLINE + size + ChatColor.YELLOW + ChatColor.BOLD + " blocks over " + ChatColor.UNDERLINE + time + ChatColor.YELLOW + ChatColor.BOLD + " seconds.");
                 }
             }.runTaskLater(HungerGamesPlus2.getInstance(), delay);
@@ -144,7 +158,7 @@ public class corelogic {
 
                     player.setGameMode(GameMode.SURVIVAL);
 
-                    player.teleport(getSpawnLocation());
+                    player.teleportAsync(getSpawnLocation());//teleport players
 
                     player.setHealth(20);
                     player.setFoodLevel(20);
@@ -194,7 +208,7 @@ public class corelogic {
         activePlayers.clear();
         activePlayersBeforeLanding.clear();
         initialPlayers.clear();
-        sender.sendMessage("Starting...");
+        sender.sendMessage("§7[§3HGPlus§7]§f Starting...");
         if (bossBar == null) {
             bossBar = HungerGamesPlus2.getInstance().getServer().createBossBar(ChatColor.YELLOW + "Loading players... ", BarColor.GREEN, BarStyle.SEGMENTED_10);
         } else {
@@ -210,11 +224,11 @@ public class corelogic {
                 activePlayersBeforeLanding.add(player.getUniqueId());//Elytra exploit fix
                 initialPlayers.add(player.getUniqueId());
             } else {
-                Bukkit.getLogger().info(player.getName() + " is not playing in the game.");
+                Bukkit.getLogger().info("§7[§3HGPlus§7]§f " + player.getName() + " is not playing in the game.");
             }
         });
         if (activePlayers.size() < 2) {
-            Bukkit.broadcastMessage("Start cancelled. Need at least two players to begin.");
+            Bukkit.broadcastMessage("§7[§3HGPlus§7]§c Start cancelled. Need at least two players to begin.");
             bossBar.removeAll();
             gameStatus = -1;
             initialPlayers.clear();
@@ -222,7 +236,7 @@ public class corelogic {
             activePlayers.clear();
             return;
         }
-        Bukkit.broadcastMessage(activePlayers.size() + " Players loaded.");
+        Bukkit.broadcastMessage("§7[§3HGPlus§7]§f " + activePlayers.size() + " Players loaded.");
         startCountdown = 10;
         bossBar.setVisible(true);
 
@@ -236,7 +250,7 @@ public class corelogic {
 
             player.setGameMode(GameMode.SURVIVAL);
 
-            player.teleport(getSpawnLocation());
+            player.teleportAsync(getSpawnLocation());
 
             player.getInventory().clear();
             player.getEquipment().clear();
@@ -246,7 +260,7 @@ public class corelogic {
         });
 
         FileConfiguration config = HungerGamesPlus2.getInstance().getConfig();
-        Bukkit.getWorld(config.getString("spawn-position.spawn-world")).getWorldBorder().setSize(initialWorldBorderSize, 5);
+        Bukkit.getWorld(config.getString("lobby-spawn-position.spawn-world")).getWorldBorder().setSize(initialWorldBorderSize, 5);
 
 
         BukkitRunnable task = new BukkitRunnable() {
@@ -267,12 +281,15 @@ public class corelogic {
                         player.sendMessage(ChatColor.GREEN + "" + ChatColor.BOLD + "Your elytra has been automatically equipped!");
                         player.setHealth(20);
                         player.setFoodLevel(20);
+                        player.setGliding(true);
+                        player.teleportAsync(getStartLocation());
+
                     });
                     bossBar.setProgress(Double.valueOf(initialPlayers.size()) / Double.valueOf(activePlayers.size()));
                     bossBar.setTitle(ChatColor.YELLOW + "" + ChatColor.BOLD + "Players Remaining: " + String.valueOf(activePlayers.size()));
 
-                    addWorldborderEvent(200, 90, 5);
-                    addWorldborderEvent(400, 75, 5);
+                    addWorldborderEvent(200, 90, 50);
+                    addWorldborderEvent(400, 75, 50);
 
                     // ADD GLOW TO ALL PLAYERS AFTER CERTAIN AMOUNT OF TIME (OPTIONAL)
                     try {
