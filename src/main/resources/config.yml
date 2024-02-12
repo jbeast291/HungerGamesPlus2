@@ -4,9 +4,16 @@ lobby-spawn-position:
   spawn-y: 0
   spawn-z: 0.5
   spawn-world: world
-  # spawn-position: The coordinates of the start position (where players are moved when the game starts)
-start-position:
-  spawn-world: world
-  spawn-x: -174.5
-  spawn-y: 287.0
-  spawn-z: 285.5
+lobby-region:
+  x1: 0
+  y1: 0
+  z1: 0
+  x2: 0
+  y2: 0
+  z2: 0
+startdoornames:
+  - exampledoor1
+  - exampledoor2
+  - exampledoor3
+  - exampledoor4
+

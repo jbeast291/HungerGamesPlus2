@@ -6,7 +6,10 @@ import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
+
+import java.util.List;
 
 public class hgplus implements CommandExecutor {
 
@@ -26,8 +29,130 @@ public class hgplus implements CommandExecutor {
                 // could probably have this show like a help page that shows all the available arguments for this command
             }
             if (args[0].equalsIgnoreCase("DEBUG")) {
-                HungerGamesPlus2.getGameLogic().ClearAndRefilChests();
-                return false;
+
+            }
+
+
+            if (args[0].equalsIgnoreCase("customchests")) {
+                if (args.length == 1) {
+                    sender.sendMessage("§7[§3HGPlus§7]§c Please specify a sub command!");
+                    return false;
+                }
+                if (args[1].equalsIgnoreCase("createcustomchest")) {//hgplus chests createcustomchest x y z x2 y2 z2
+                    if (!(sender instanceof Player)) {
+                        sender.sendMessage("§7[§3HGPlus§7]§c Only players can execute this command.");
+                        return false;
+                    }
+                    if (args.length <= 8) {
+                        sender.sendMessage("§7[§3HGPlus§7]§c Please specify a sub command!");
+                        return false;
+                    }
+                    FileConfiguration savedlocations = HungerGamesPlus2.getInstance().getSaveDataHandlerinstance().getConfig();
+                    List<String> names = savedlocations.getStringList("chests.names");
+                    if (names.contains(args[2])) {
+                        sender.sendMessage("§7[§3HGPlus§7]§c " + (args[2]) + " already Exists!");
+                        return false;
+                    }
+                    Player player = (Player) sender;
+                    HungerGamesPlus2.getLootLogic().registerCustomChest(args, player);
+                    return true;
+                }
+                if (args[1].equalsIgnoreCase("listcustomchests")) {
+                    sender.sendMessage("§7[§3HGPlus§7]§f Currently registered chests: §a" + HungerGamesPlus2.getInstance().getSaveDataHandlerinstance().getConfig().getStringList("chests.names"));
+                    return true;
+                }
+                if (args[1].equalsIgnoreCase("deletecustomchest")) {
+                    if (args.length <= 2) {
+                        sender.sendMessage("§7[§3HGPlus§7]§c Please specify a sub command!");
+                        return false;
+                    }
+                    HungerGamesPlus2.getLootLogic().deleteCustomChest(args[2]);
+                    return true;
+
+                }
+            }
+
+
+            if (args[0].equalsIgnoreCase("doors")) {
+                if (args.length == 1) {
+                    sender.sendMessage("§7[§3HGPlus§7]§c Please specify a sub command!");
+                    return false;
+                }
+                if (args[1].equalsIgnoreCase("createdoor")) {
+                    if (!(sender instanceof Player)) {
+                        sender.sendMessage("§7[§3HGPlus§7]§c Only players can execute this command.");
+                        return false;
+                    }
+                    if (args.length <= 8) {
+                        sender.sendMessage("§7[§3HGPlus§7]§c Please specify a sub command!");
+                        return false;
+                    }
+                    FileConfiguration savedlocations = HungerGamesPlus2.getInstance().getSaveDataHandlerinstance().getConfig();
+                    List<String> names = savedlocations.getStringList("doors.names");
+                    if (names.contains(args[2])) {
+                        sender.sendMessage("§7[§3HGPlus§7]§c " + (args[2]) + " already Exists!");
+                        return false;
+                    }
+                    Player player = (Player) sender;
+                    HungerGamesPlus2.getSetup().registerDoor(args, player);
+                    return true;
+                }
+                if (args[1].equalsIgnoreCase("listdoors")){
+                    sender.sendMessage("§7[§3HGPlus§7]§f Currently registered doors: §a" + HungerGamesPlus2.getInstance().getSaveDataHandlerinstance().getConfig().getStringList("doors.names"));
+                    return true;
+                }
+                if (args[1].equalsIgnoreCase("deletedoor")){
+                    if (args.length <= 2) {
+                        sender.sendMessage("§7[§3HGPlus§7]§c Please specify a sub command!");
+                        return false;
+                    }
+
+                    HungerGamesPlus2.getSetup().unregisterdoor(args[2]);
+                    return true;
+                }
+                if (args[1].equalsIgnoreCase("opendoor")){
+                    if (args.length == 2) {
+                        sender.sendMessage("§7[§3HGPlus§7]§c Please specify a door name!");
+                        return false;
+                    }
+                    if (args.length == 3) {
+                        sender.sendMessage("§7[§3HGPlus§7]§c Please specify a durration!");
+                        return false;
+                    }
+                    HungerGamesPlus2.getSetup().openDoor(args[2], Integer.valueOf(args[3]));
+                    return true;
+                }
+                if (args[1].equalsIgnoreCase("closedoor")){
+                    if (args.length <= 2) {
+                        sender.sendMessage("§7[§3HGPlus§7]§c Please specify a door name!");
+                        return false;
+                    }
+                    if (args.length <= 3) {
+                        sender.sendMessage("§7[§3HGPlus§7]§c Please specify a durration!");
+                        return false;
+                    }
+                    HungerGamesPlus2.getSetup().closeDoor(args[2], Integer.valueOf(args[3]));
+                    return true;
+                }
+            }
+
+
+            if (args[0].equalsIgnoreCase("refillchests")) {
+                sender.sendMessage("§7[§3HGPlus§7]§f Attempting to refill chests...");
+                HungerGamesPlus2.getLootLogic().ClearAndRefilChests();
+                HungerGamesPlus2.getLootLogic().ClearAndRefillCustomChests();
+                sender.sendMessage("§7[§3HGPlus§7]§f Chests Refilled!");
+                return true;
+            }
+            if (args[0].equalsIgnoreCase("hidecratenames")) {
+                sender.sendMessage("§7[§3HGPlus§7]§f Debug crate mode §cdisabled§f, No players can see the names of crates anymore");
+                HungerGamesPlus2.getSetup().hideCrateNames();
+                return true;
+            }
+            if (args[0].equalsIgnoreCase("showcratenames")) {
+                sender.sendMessage("§7[§3HGPlus§7]§f Debug crate mode §aenabled§f, All players can see the names of crates now");
+                HungerGamesPlus2.getSetup().showCrateNames();
+                return true;
             }
             if (args[0].equalsIgnoreCase("start")) {
                 if (gameStatus != -1) {
@@ -46,52 +171,38 @@ public class hgplus implements CommandExecutor {
 
                 }
             } else if (args[0].equalsIgnoreCase("players")) {
+                if (args.length == 1) {
+                    sender.sendMessage("§7[§3HGPlus§7]§c Please specify a sub command!");
+                    return false;
+                }
                 if (args[1].equalsIgnoreCase("list")) {
                     sender.sendMessage("§7[§3HGPlus§7]§c Active Players: (Command not setup yet)");
                 }
             } else if (args[0].equalsIgnoreCase("config")) {
+                if (args.length == 1) {
+                    sender.sendMessage("§7[§3HGPlus§7]§c Please specify a sub command!");
+                    return true;
+                }
                 if (gameStatus == -1) {
                     if (args[1].equalsIgnoreCase("setlobby")) {
                         if (!(sender instanceof Player)) {
                             sender.sendMessage("§7[§3HGPlus§7]§c Only players can execute this command.");
                             return false;
                         }
-                        Player player = (Player) sender;
-                        HungerGamesPlus2.getInstance().getConfig().set("lobby-spawn-position.spawn-world", player.getLocation().getWorld().getName());
-                        HungerGamesPlus2.getInstance().getConfig().set("lobby-spawn-position.spawn-x", Double.valueOf(String.format("%,.2f", player.getLocation().getX())));
-                        HungerGamesPlus2.getInstance().getConfig().set("lobby-spawn-position.spawn-y", Double.valueOf(String.format("%,.2f", player.getLocation().getY())));
-                        HungerGamesPlus2.getInstance().getConfig().set("lobby-spawn-position.spawn-z", Double.valueOf(String.format("%,.2f", player.getLocation().getZ())));
-                        HungerGamesPlus2.getInstance().saveConfig();
-
-                        sender.sendMessage("§7[§3HGPlus§7]§f Successfully set §2lobby§f to §2" +
-                                String.format("%,.2f", player.getLocation().getX()) + "§f, §2" +
-                                String.format("%,.2f", player.getLocation().getY()) + "§f, §2" +
-                                String.format("%,.2f", player.getLocation().getZ()) + "§f in §2" +
-                                player.getLocation().getWorld().getName());
-
+                        HungerGamesPlus2.getSetup().setLobby(sender); //Logic
                     }
-                    if (args[1].equalsIgnoreCase("setstart")) {
-                        if (!(sender instanceof Player)) {
-                            sender.sendMessage("§7[§3HGPlus§7]§c Only players can execute this command.");
-                            return false;
+                    if (args[1].equalsIgnoreCase("setlobbyregion")) {
+                        if (args.length <= 7) {
+                            sender.sendMessage("§7[§3HGPlus§7]§c Please specify a sub command!");
+                            return true;
                         }
-                        Player player = (Player) sender;
-                        HungerGamesPlus2.getInstance().getConfig().set("start-position.spawn-world", player.getLocation().getWorld().getName());
-                        HungerGamesPlus2.getInstance().getConfig().set("start-position.spawn-x", Double.valueOf(String.format("%,.2f", player.getLocation().getX())));
-                        HungerGamesPlus2.getInstance().getConfig().set("start-position.spawn-y", Double.valueOf(String.format("%,.2f", player.getLocation().getY())));
-                        HungerGamesPlus2.getInstance().getConfig().set("start-position.spawn-z", Double.valueOf(String.format("%,.2f", player.getLocation().getZ())));
-                        HungerGamesPlus2.getInstance().saveConfig();
-
-                        sender.sendMessage("§7[§3HGPlus§7]§f Successfully set §2spawn§f to §2" +
-                                String.format("%,.2f", player.getLocation().getX()) + "§f, §2" +
-                                String.format("%,.2f", player.getLocation().getY()) + "§f, §2" +
-                                String.format("%,.2f", player.getLocation().getZ()) + "§f in §2" +
-                                player.getLocation().getWorld().getName());
-
-                    } else if (args[1].equalsIgnoreCase("reload")) {
+                        HungerGamesPlus2.getSetup().setLobbyRegion(args); //Logic
+                    }
+                    else if (args[1].equalsIgnoreCase("reload")) {
                         HungerGamesPlus2.getInstance().reloadConfig();
                         sender.sendMessage("§7[§3HGPlus§7]§f Config reloaded!");
-                    } else {
+                    }
+                    else {
                         sender.sendMessage("§7[§3HGPlus§7]§c Subcommand not recognized.");
                     }
 
@@ -99,11 +210,13 @@ public class hgplus implements CommandExecutor {
                     sender.sendMessage("§7[§3HGPlus§7]§c Cannot change config during game.");
                 }
 
-            } else {
+            }
+            else {
                 sender.sendMessage("§7[§3HGPlus§7]§c That command was not recognized.");
             }
 
-        } else {
+        }
+        else {
             Bukkit.getLogger().info("§7[§3HGPlus§7]§c An error has occured.");
         }
         return false;

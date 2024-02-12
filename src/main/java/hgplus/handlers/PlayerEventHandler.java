@@ -2,15 +2,22 @@ package hgplus.handlers;
 
 import hgplus.HungerGamesPlus2;
 import hgplus.corelogic.corelogic;
+import io.papermc.paper.event.player.PrePlayerAttackEntityEvent;
+import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
+import org.bukkit.GameMode;
 import org.bukkit.Material;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityToggleGlideEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.player.*;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.List;
@@ -27,6 +34,15 @@ public class PlayerEventHandler implements Listener {
         Player player = (Player) event.getEntity();
         if(!CoreLogic.activePlayers.contains(player.getUniqueId())) return;
 
+        FileConfiguration config = HungerGamesPlus2.getInstance().getConfig();
+        if(HungerGamesPlus2.getSetup().checkIfPlayerIsInRegion(config.getInt("lobby-region.x"),
+                config.getInt("lobby-region.y"),
+                config.getInt("lobby-region.z"),
+                config.getInt("lobby-region.x2"),
+                config.getInt("lobby-region.y2"),
+                config.getInt("lobby-region.z2"),
+                player)) return;
+
         if((player.getInventory().getChestplate() != null) && (player.getInventory().getChestplate().getType() == Material.ELYTRA)) {
             player.getEquipment().setChestplate(null);
             CoreLogic.activePlayersBeforeLanding.remove(player.getUniqueId());
@@ -35,6 +51,7 @@ public class PlayerEventHandler implements Listener {
 
     @EventHandler
     public void onPlayerDeathEvent(PlayerDeathEvent event) {
+
         if(CoreLogic.gameStatus != 1) return;
         Player player = event.getEntity();
         Player killer = player.getKiller();
@@ -55,8 +72,28 @@ public class PlayerEventHandler implements Listener {
 
     @EventHandler
     public void onPlayerQuitEvent(PlayerQuitEvent event) {
-        if(CoreLogic.gameStatus != 1) return;
-        CoreLogic.removePlayerFromEvent(event.getPlayer().getUniqueId(), null);
+        if(CoreLogic.gameStatus != -1) {
+            CoreLogic.removePlayerFromEvent(event.getPlayer().getUniqueId(), null);
+        }
+    }
+
+    @EventHandler
+    public void onPlayerJoinEvent(PlayerJoinEvent event) {
+        Bukkit.getLogger().info("test");
+        Player player = event.getPlayer();
+        if(CoreLogic.gameStatus != -1){
+            player.setGameMode(GameMode.SPECTATOR);
+            player.teleportAsync(HungerGamesPlus2.getGameLogic().getSpawnLocation());
+            player.sendMessage("§7[§3HGPlus§7]§f A game is currently running. You have been set to spectator and can join the next game when this one ends.");
+            player.sendActionBar(TextComponent.fromLegacyText("You are now spectating a game"));
+            CoreLogic.lateSpectatorPlayers.add(player.getUniqueId());
+        }
+        else if(CoreLogic.gameStatus == -1){
+            player.teleportAsync(HungerGamesPlus2.getGameLogic().getSpawnLocation());
+            player.setGameMode(GameMode.SURVIVAL);
+            player.setHealth(20);
+            player.setSaturation(20);
+        }
     }
 
     @EventHandler
@@ -68,6 +105,79 @@ public class PlayerEventHandler implements Listener {
         if(event.getSlot() == 38) {
             event.setCancelled(true);
         }
+    }
+
+    //block blocks like trapdoors and fence gates
+    @EventHandler
+    public void onPlayerInteractEvent(PlayerInteractEvent e) {
+        if (e.getClickedBlock() == null)
+        {
+            return;
+        }
+        if (e.getPlayer().hasPermission("hungergamesplus.nonplayer")){
+            return;
+        }
+        if (IsProtectedBlock(e.getClickedBlock().getType())){
+            e.setCancelled(true);
+            e.getPlayer().sendMessage("§cYou cannot interact with this!");
+        }
+    }
+
+    boolean IsProtectedBlock(Material material){
+        if (material.equals(Material.OAK_FENCE_GATE) ||
+                material.equals(Material.SPRUCE_FENCE_GATE) ||
+                material.equals(Material.BIRCH_FENCE_GATE) ||
+                material.equals(Material.JUNGLE_FENCE_GATE) ||
+                material.equals(Material.ACACIA_FENCE_GATE) ||
+                material.equals(Material.DARK_OAK_FENCE_GATE) ||
+                material.equals(Material.MANGROVE_FENCE_GATE) ||
+                material.equals(Material.CHERRY_FENCE_GATE) ||
+                material.equals(Material.BAMBOO_FENCE_GATE) ||
+                material.equals(Material.CRIMSON_FENCE_GATE) ||
+                material.equals(Material.WARPED_FENCE_GATE) ||
+
+                material.equals(Material.OAK_TRAPDOOR) ||
+                material.equals(Material.SPRUCE_TRAPDOOR) ||
+                material.equals(Material.BIRCH_TRAPDOOR) ||
+                material.equals(Material.JUNGLE_TRAPDOOR) ||
+                material.equals(Material.ACACIA_TRAPDOOR) ||
+                material.equals(Material.DARK_OAK_TRAPDOOR) ||
+                material.equals(Material.MANGROVE_TRAPDOOR) ||
+                material.equals(Material.CHERRY_TRAPDOOR) ||
+                material.equals(Material.BAMBOO_TRAPDOOR) ||
+                material.equals(Material.CRIMSON_TRAPDOOR) ||
+                material.equals(Material.WARPED_TRAPDOOR) ||
+                material.equals(Material.IRON_TRAPDOOR) ||
+
+                material.equals(Material.GLOW_ITEM_FRAME) ||
+                material.equals(Material.ITEM_FRAME) ||
+
+                material.equals(Material.FURNACE) ||
+                material.equals(Material.BLAST_FURNACE) ||
+                material.equals(Material.SMOKER) ||
+                material.equals(Material.BARREL) ||
+
+                material.equals(Material.WHITE_BED) ||
+                material.equals(Material.GRAY_BED) ||
+                material.equals(Material.LIGHT_GRAY_BED) ||
+                material.equals(Material.BLACK_BED) ||
+                material.equals(Material.BROWN_BED) ||
+                material.equals(Material.RED_BED) ||
+                material.equals(Material.ORANGE_BED) ||
+                material.equals(Material.YELLOW_BED) ||
+                material.equals(Material.GREEN_BED) ||
+                material.equals(Material.LIME_BED) ||
+                material.equals(Material.CYAN_BED) ||
+                material.equals(Material.LIGHT_BLUE_BED) ||
+                material.equals(Material.BLUE_BED) ||
+                material.equals(Material.PURPLE_BED) ||
+                material.equals(Material.MAGENTA_BED) ||
+                material.equals(Material.PINK_BED)
+                ) {
+
+            return true;
+        }
+        return false;
     }
 
 }
