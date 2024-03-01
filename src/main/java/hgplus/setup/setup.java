@@ -9,10 +9,7 @@ import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.entity.ArmorStand;
-import org.bukkit.entity.BlockDisplay;
-import org.bukkit.entity.EntityType;
-import org.bukkit.entity.Player;
+import org.bukkit.entity.*;
 import org.bukkit.util.Transformation;
 import org.joml.AxisAngle4f;
 import org.joml.Vector3d;
@@ -247,6 +244,13 @@ public class setup {
                     blockpos.getBlock().setType(mat);
                 }
             }
+        }
+    }
+    public void clearGroundItems(){
+        FileConfiguration config = HungerGamesPlus2.getInstance().getConfig();
+        Collection<Item> grounditems = Bukkit.getWorld(config.getString("lobby-spawn-position.spawn-world")).getEntitiesByClass(Item.class);
+        for(Item currentitem : grounditems) {
+            currentitem.setHealth(0);
         }
     }
 }

@@ -139,6 +139,9 @@ public class corelogic {
         HungerGamesPlus2.getLootLogic().ClearAndRefillCustomChests();
         Bukkit.broadcastMessage("§7[§3HGPlus§7]§f Chests Refilled!");
 
+        Bukkit.broadcastMessage("§7[§3HGPlus§7]§f Clearing ground items!");
+        HungerGamesPlus2.getSetup().clearGroundItems();
+
         activePlayers.forEach(pUUID -> {
 
             Player player = Bukkit.getPlayer(pUUID);
@@ -182,6 +185,9 @@ public class corelogic {
                         player.sendMessage("§7[§3HGPlus§7]§f Your §aelytra§f has been automatically equipped!");
                         player.setHealth(20);
                         player.setFoodLevel(20);
+                        player.setExp(0);
+                        player.setExperienceLevelAndProgress(0);
+                        player.setRespawnLocation(getSpawnLocation());
                     });
 
 
@@ -306,7 +312,7 @@ public class corelogic {
                 };
 
                 try {
-                    task.runTaskLater(HungerGamesPlus2.getInstance(), 10);
+                    task.runTaskLater(HungerGamesPlus2.getInstance(), 20);
                 } catch (UnsupportedOperationException e) {
                     // Log a warning message
                     Bukkit.getLogger().warning("Failed to schedule game start task: " + e.getMessage());
@@ -337,11 +343,7 @@ public class corelogic {
             Bukkit.getScheduler().cancelTask(startupTask);
         }
 
-        //clear ground items
-        Collection<Item> item = Bukkit.getWorld("world").getEntitiesByClass(Item.class);
-        for(Item currentitem : item) {
-            currentitem.remove();
-        }
+
 
         Bukkit.getLogger().info("Ending game!");
 
@@ -362,14 +364,15 @@ public class corelogic {
         bossBar.setStyle(BarStyle.SOLID);
 
 
-
-
         BukkitRunnable task = new BukkitRunnable() {
             @Override
             public void run() {
                 gameStatus = -1;
                 bossBar.setVisible(false);
                 winner.setGlowing(false);
+
+                //clear ground items
+                HungerGamesPlus2.getSetup().clearGroundItems();
 
                 activePlayers.forEach(pUUID -> {
                     Player player = Bukkit.getPlayer(pUUID);
@@ -395,6 +398,10 @@ public class corelogic {
                     player.setHealth(20);
                     player.setFoodLevel(20);
 
+                    //just in case
+                    player.getInventory().clear();
+                    player.getEquipment().clear();
+
                 });
 
                 initialPlayers.clear();
@@ -415,6 +422,10 @@ public class corelogic {
                     player.setFireTicks(0);
                     player.setHealth(20);
                     player.setFoodLevel(20);
+
+                    //just in case
+                    player.getInventory().clear();
+                    player.getEquipment().clear();
                 });
 
                 lateSpectatorPlayers.clear();
@@ -425,7 +436,7 @@ public class corelogic {
         };
 
         try {
-            task.runTaskLater(HungerGamesPlus2.getInstance(), 60);
+            task.runTaskLater(HungerGamesPlus2.getInstance(), 150);
         } catch (UnsupportedOperationException e) {
             // Log a warning message
             Bukkit.getLogger().warning("Failed to schedule game start task: " + e.getMessage());

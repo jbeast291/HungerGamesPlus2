@@ -27,29 +27,74 @@ public class lootlogic {
             chest.getBlockInventory().clear();
         }
 
-        for(ArmorStand currentArmorStand : armorStand){
-            Chest chest = (Chest) currentArmorStand.getWorld().getBlockAt(currentArmorStand.getLocation()).getState();
-            if(currentArmorStand.getScoreboardTags().contains("Common")){
-                chest.setLootTable(Bukkit.getServer().getLootTable(new NamespacedKey("hungergamesloottables","commonbox")));
-                chest.setCustomName("§0§lCommon Crate");
+        //randomized loot
+        if(config.getBoolean("randomized-loot"))
+        {
+            for(ArmorStand currentArmorStand : armorStand) {
+                Chest chest = (Chest) currentArmorStand.getWorld().getBlockAt(currentArmorStand.getLocation()).getState();
+                if(currentArmorStand.getScoreboardTags().contains("Common") ||
+                        currentArmorStand.getScoreboardTags().contains("Uncommon") ||
+                        currentArmorStand.getScoreboardTags().contains("Rare") ||
+                        currentArmorStand.getScoreboardTags().contains("Epic") ||
+                        currentArmorStand.getScoreboardTags().contains("Legendary")){
+
+                    int max = 5;
+                    int min = 1;
+                    int range = max - min + 1;
+
+                    int rand = (int)(Math.random() * range) + min;
+
+                    if(rand == 1){
+                        chest.setLootTable(Bukkit.getServer().getLootTable(new NamespacedKey("hungergamesloottables","commonbox")));
+                        chest.setCustomName("§0§lCommon Crate");
+                    }
+                    else if(rand == 2){
+                        chest.setLootTable(Bukkit.getServer().getLootTable(new NamespacedKey("hungergamesloottables","uncommon")));
+                        chest.setCustomName("§a§lUncommon Crate");
+                    }
+                    else if(rand == 3){
+                        chest.setLootTable(Bukkit.getServer().getLootTable(new NamespacedKey("hungergamesloottables","rarefoodbox")));
+                        chest.setCustomName("§5§lFood Crate");
+                    }
+                    else if(rand == 4){
+                        chest.setLootTable(Bukkit.getServer().getLootTable(new NamespacedKey("hungergamesloottables","epicbox")));
+                        chest.setCustomName("§b§lEpic Crate");
+                    }
+                    else if(rand == 5){
+                        chest.setLootTable(Bukkit.getServer().getLootTable(new NamespacedKey("hungergamesloottables","legendarybox")));
+                        chest.setCustomName("§e§lLegendary Crate");
+                    }
+                    chest.update(true);
+                }
             }
-            else if(currentArmorStand.getScoreboardTags().contains("Uncommon")){
-                chest.setLootTable(Bukkit.getServer().getLootTable(new NamespacedKey("hungergamesloottables","uncommon")));
-                chest.setCustomName("§a§lUncommon Crate");
+        }
+
+        //preset loot
+        else {
+            for(ArmorStand currentArmorStand : armorStand){
+                Chest chest = (Chest) currentArmorStand.getWorld().getBlockAt(currentArmorStand.getLocation()).getState();
+                if(currentArmorStand.getScoreboardTags().contains("Common")){
+                    chest.setLootTable(Bukkit.getServer().getLootTable(new NamespacedKey("hungergamesloottables","commonbox")));
+                    chest.setCustomName("§0§lCommon Crate");
+                }
+                else if(currentArmorStand.getScoreboardTags().contains("Uncommon")){
+                    chest.setLootTable(Bukkit.getServer().getLootTable(new NamespacedKey("hungergamesloottables","uncommon")));
+                    chest.setCustomName("§a§lUncommon Crate");
+                }
+                else if(currentArmorStand.getScoreboardTags().contains("Rare")){
+                    chest.setLootTable(Bukkit.getServer().getLootTable(new NamespacedKey("hungergamesloottables","rarefoodbox")));
+                    chest.setCustomName("§5§lFood Crate");
+                }
+                else if(currentArmorStand.getScoreboardTags().contains("Epic")){
+                    chest.setLootTable(Bukkit.getServer().getLootTable(new NamespacedKey("hungergamesloottables","epicbox")));
+                    chest.setCustomName("§b§lEpic Crate");
+                }
+                else if(currentArmorStand.getScoreboardTags().contains("Legendary")){
+                    chest.setLootTable(Bukkit.getServer().getLootTable(new NamespacedKey("hungergamesloottables","legendarybox")));
+                    chest.setCustomName("§e§lLegendary Crate");
+                }
+                chest.update(true);
             }
-            else if(currentArmorStand.getScoreboardTags().contains("Rare")){
-                chest.setLootTable(Bukkit.getServer().getLootTable(new NamespacedKey("hungergamesloottables","rarefoodbox")));
-                chest.setCustomName("§5§lFood Crate");
-            }
-            else if(currentArmorStand.getScoreboardTags().contains("Epic")){
-                chest.setLootTable(Bukkit.getServer().getLootTable(new NamespacedKey("hungergamesloottables","epicbox")));
-                chest.setCustomName("§b§lEpic Crate");
-            }
-            else if(currentArmorStand.getScoreboardTags().contains("Legendary")){
-                chest.setLootTable(Bukkit.getServer().getLootTable(new NamespacedKey("hungergamesloottables","legendarybox")));
-                chest.setCustomName("§e§lLegendary Crate");
-            }
-            chest.update(true);
         }
     }
     public void ClearAndRefillCustomChests() {

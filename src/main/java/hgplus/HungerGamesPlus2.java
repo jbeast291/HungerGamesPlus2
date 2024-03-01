@@ -10,6 +10,8 @@ import hgplus.handlers.PlayerEventHandler;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.nio.file.Path;
+
 public final class HungerGamesPlus2 extends JavaPlugin {
 
     private static HungerGamesPlus2 instance;

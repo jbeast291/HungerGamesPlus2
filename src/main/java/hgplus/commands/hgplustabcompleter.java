@@ -184,9 +184,16 @@ public class hgplustabcompleter implements TabCompleter {
             else if (args[0].equalsIgnoreCase("config")) {
                 if(args.length == 2){
                     List<String> ListToReturn = new ArrayList<>();
+                    ListToReturn.add("randomizedloot");
                     ListToReturn.add("setlobby");
                     ListToReturn.add("setlobbyregion");
                     ListToReturn.add("reload");
+                    return ListToReturn;
+                }
+                if (args[1].equalsIgnoreCase("randomizedloot")){
+                    List<String> ListToReturn = new ArrayList<>();
+                    ListToReturn.add("true");
+                    ListToReturn.add("false");
                     return ListToReturn;
                 }
                 if (args[1].equalsIgnoreCase("setlobbyregion")){ // name x y z 2x 2y 2z

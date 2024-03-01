@@ -1,4 +1,5 @@
 # spawn-position: The coordinates of the lobby position
+randomized-loot: false
 lobby-spawn-position:
   spawn-x: 0.5
   spawn-y: 0

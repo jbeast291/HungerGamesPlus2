@@ -17,7 +17,9 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityToggleGlideEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.player.*;
+import org.bukkit.inventory.EnchantingInventory;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.List;
@@ -73,6 +75,17 @@ public class PlayerEventHandler implements Listener {
     @EventHandler
     public void onPlayerQuitEvent(PlayerQuitEvent event) {
         if(CoreLogic.gameStatus != -1) {
+            Player player = event.getPlayer();
+            if (CoreLogic.activePlayers.contains(player.getUniqueId()))
+            {
+                for (ItemStack item : player.getInventory().getContents()) {
+                    if(item == null) {continue;}
+                    player.getWorld().dropItemNaturally(player.getLocation(), item);
+                    player.getInventory().removeItem(item);
+                }
+
+                player.getInventory().clear();
+            }
             CoreLogic.removePlayerFromEvent(event.getPlayer().getUniqueId(), null);
         }
     }
@@ -156,6 +169,7 @@ public class PlayerEventHandler implements Listener {
                 material.equals(Material.BLAST_FURNACE) ||
                 material.equals(Material.SMOKER) ||
                 material.equals(Material.BARREL) ||
+                material.equals(Material.SMITHING_TABLE) ||
 
                 material.equals(Material.WHITE_BED) ||
                 material.equals(Material.GRAY_BED) ||
