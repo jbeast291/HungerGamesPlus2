@@ -25,6 +25,9 @@ import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
+import java.time.format.DateTimeFormatter;
+import java.time.LocalDateTime;
+
 public class corelogic {
 
     //-2: game over/10s victory intermission thing
@@ -34,10 +37,11 @@ public class corelogic {
     public int gameStatus = -1;
     private int startCountdown = 10;
     private int endCountdown = 10;
-    private BossBar bossBar;
+    public BossBar bossBar;
     private Chest chest;
     private double initialWorldBorderSize = 299;
     private List<Integer> gameEventTaskIDs = new ArrayList<Integer>();
+    private int playerPositionCounter = 0;
 
     // private static Location spawnpoint = new Location(Bukkit.getWorld("world"), -65.5,98,225.5);
 
@@ -162,6 +166,11 @@ public class corelogic {
         FileConfiguration config = HungerGamesPlus2.getInstance().getConfig();
         Bukkit.getWorld(config.getString("lobby-spawn-position.spawn-world")).getWorldBorder().setSize(initialWorldBorderSize, 5);
 
+        //announce to discord
+        Bukkit.dispatchCommand(Bukkit.getConsoleSender(),"discordbroadcast hglogs `[HGPlus]` A game was just started at **" + HungerGamesPlus2.getSetup().getCurrentTimeAsString() + "**");
+
+
+
 
         BukkitRunnable task = new BukkitRunnable() {
             @Override
@@ -194,6 +203,17 @@ public class corelogic {
                     bossBar.setProgress(Double.valueOf(initialPlayers.size()) / Double.valueOf(activePlayers.size()));
                     bossBar.setTitle("§7[§3HGPlus§7]§f Players Remaining: §6" + String.valueOf(activePlayers.size()));
 
+                    //for positions in discord
+                    playerPositionCounter = initialPlayers.size();
+
+                    //send initial player list to discord
+                    List<String> initialPlayerNames = new ArrayList<>();
+                    for(UUID currentPlayerUUID : initialPlayers) {
+                        initialPlayerNames.add(Bukkit.getOfflinePlayer(currentPlayerUUID).getName());
+                    }
+                    Bukkit.dispatchCommand(Bukkit.getConsoleSender(),"discordbroadcast hglogs Initial players in this game: **" + initialPlayerNames + "**");
+
+
                     //worldborder events
                     addWorldborderEvent(2400, 150, 60); //2 min wait
                     addWorldborderEvent(4800, 20, 60);//4 min wait
@@ -206,6 +226,9 @@ public class corelogic {
                                 gameEventTaskIDs.remove(gameEventTaskIDs.indexOf(getTaskId()));
                                 Bukkit.broadcastMessage("§7[§3HGPlus§7]§f Closing lobby doors! Players that have §cnot§f jummped will be removed");
                                 HungerGamesPlus2.getSetup().closeStartDoors();
+
+                                List<UUID> playersMarkedForDeath = new ArrayList<UUID>();
+
                                 activePlayers.forEach(pUUID -> {
                                     Player player = Bukkit.getPlayer(pUUID);
                                     if (player == null) return;
@@ -216,6 +239,12 @@ public class corelogic {
                                             config.getInt("lobby-region.y2"),
                                             config.getInt("lobby-region.z2"),
                                             player)){
+                                        playersMarkedForDeath.add(pUUID);
+                                    }
+                                });
+                                playersMarkedForDeath.forEach(pUUID -> {
+                                    Player player = Bukkit.getPlayer(pUUID);
+                                    if (gameStatus == 1) {
                                         player.setHealth(0);
                                     }
                                 });
@@ -271,21 +300,24 @@ public class corelogic {
         }
     }
 
-    public void removePlayerFromEvent(UUID pUUID, UUID killerUUID) {
+    public void removePlayerFromEvent(UUID pUUID, UUID killerUUID, boolean died, boolean leftGame) {
         if (!activePlayers.contains(pUUID)) return;
         Player player = Bukkit.getPlayer(pUUID);
         Player killer;
 
+        //remove the player if they left just before the game started
         if (gameStatus == 0){
             initialPlayers.remove(pUUID);
         }
 
+        //get ref to killer
         if (killerUUID != null) {
             killer = Bukkit.getPlayer(killerUUID);
         } else {
             killer = null;
         }
 
+        //remove the player from the event list and elytra list
         activePlayers.remove(pUUID);
         activePlayersBeforeLanding.remove(pUUID);
 
@@ -295,47 +327,46 @@ public class corelogic {
 
         bossBar.setProgress(new Double(activePlayers.size()) / new Double(initialPlayers.size()));
 
-        if (activePlayers.size() <= 1) {
-
-            Location tpSpot = player.getLocation();
-
+        if (died) {//set spectator etc
             if (Bukkit.getOnlinePlayers().contains(player)) {
                 player.setGameMode(GameMode.SPECTATOR);
-                BukkitRunnable task = new BukkitRunnable() {
-                    @Override
-                    public void run() {
-                        if (player.isDead()) {
-                            player.spigot().respawn();
-                        }
-                        player.teleportAsync(tpSpot);
-                    }
-                };
-
-                try {
-                    task.runTaskLater(HungerGamesPlus2.getInstance(), 20);
-                } catch (UnsupportedOperationException e) {
-                    // Log a warning message
-                    Bukkit.getLogger().warning("Failed to schedule game start task: " + e.getMessage());
-                }
             }
+        }
 
-            if (killer == null) {
+        if (activePlayers.size() <= 1) {
+
+            if (leftGame){
+                Bukkit.broadcastMessage("§7[§3HGPlus§7]§c§l " + player.getName() + "§f left the game and was eliminated!");
+            }
+            else if (killer == null) {
                 Bukkit.broadcastMessage("§7[§3HGPlus§7]§c§l " + player.getName() + "§f was eliminated!");
-            } else {
+            }
+            else {
                 Bukkit.broadcastMessage("§7[§3HGPlus§7]§c§l " + player.getName() + "§f was eliminated by §c§l" + killer.getName() + "§f!");
             }
 
             Bukkit.broadcastMessage("§7[§3HGPlus§7]§f Game over! The winner is §6" + winner.getName() + "§f!");
+
+            Bukkit.dispatchCommand(Bukkit.getConsoleSender(),"discordbroadcast hglogs  **" + player.getName() + "** Position: `" + playerPositionCounter + "`!");
+
+            //announce to discord
+            Bukkit.dispatchCommand(Bukkit.getConsoleSender(),"discordbroadcast hglogs  **"+ winner.getName() + "** just won a game!");
+
+            //end the game
             EndGame();
         } else {
+            //update bossbar
             bossBar.setTitle("§7[§3HGPlus§7]§f Players Remaining: §6" + String.valueOf(activePlayers.size()));
-
-            if (killer == null) {
+            if (leftGame){
+                Bukkit.broadcastMessage("§7[§3HGPlus§7]§c§l " + player.getName() + "§f left the game and was eliminated!");
+            }
+            else if (killer == null) {
                 Bukkit.broadcastMessage("§7[§3HGPlus§7]§c§l " + player.getName() + "§f was eliminated! §c§l" + activePlayers.size() + "§f players remaining!");
             } else {
                 Bukkit.broadcastMessage("§7[§3HGPlus§7]§c§l " + player.getName() + "§f was eliminated by §c§l" + killer.getName() + "§f! §c§l" + activePlayers.size() + "§f players remaining!");
             }
-
+            Bukkit.dispatchCommand(Bukkit.getConsoleSender(),"discordbroadcast hglogs  **" + player.getName() + "** Position: `" + playerPositionCounter + "`!");
+            playerPositionCounter--;
         }
     }
     public void EndGame() {
@@ -343,7 +374,8 @@ public class corelogic {
             Bukkit.getScheduler().cancelTask(startupTask);
         }
 
-
+        //send the time the game ended to discord
+        Bukkit.dispatchCommand(Bukkit.getConsoleSender(),"discordbroadcast hglogs `[HGPlus]` Time game ended: **" + HungerGamesPlus2.getSetup().getCurrentTimeAsString() + "**");
 
         Bukkit.getLogger().info("Ending game!");
 

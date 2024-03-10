@@ -54,22 +54,37 @@ public class PlayerEventHandler implements Listener {
     @EventHandler
     public void onPlayerDeathEvent(PlayerDeathEvent event) {
 
-        if(CoreLogic.gameStatus != 1) return;
+        if (CoreLogic.gameStatus != 1) return;
         Player player = event.getEntity();
         Player killer = player.getKiller();
 
         player.getWorld().strikeLightningEffect(player.getLocation());
 
-        List<ItemStack> list = event.getDrops();
-        list.removeIf(item -> item.getType() == Material.ELYTRA);
-
-        if(killer != null) {
-            CoreLogic.removePlayerFromEvent(player.getUniqueId(), killer.getUniqueId());
-        } else {
-            CoreLogic.removePlayerFromEvent(player.getUniqueId(), null);
+        //drop player items as the death event is cancelled and items will not drop
+        for (ItemStack item : player.getInventory().getContents()) {
+            if (item == null) {
+                continue;
+            }
+            if (item.getType() == Material.ELYTRA) {
+                continue;
+            }
+            player.getWorld().dropItemNaturally(player.getLocation(), item);
+            player.getInventory().removeItem(item);
         }
+        //clear their inv just in case
+        player.getInventory().clear();
 
-        event.setDeathMessage(null);
+        //cancel the player dying
+        event.setCancelled(true);
+
+        //remove player from the event
+        if (killer != null) {
+            CoreLogic.removePlayerFromEvent(player.getUniqueId(), killer.getUniqueId(), true, false);
+        } else {
+            CoreLogic.removePlayerFromEvent(player.getUniqueId(), null, true, false);
+        }
+        //remove the vinilla message
+        event.deathMessage(null);
     }
 
     @EventHandler
@@ -80,13 +95,16 @@ public class PlayerEventHandler implements Listener {
             {
                 for (ItemStack item : player.getInventory().getContents()) {
                     if(item == null) {continue;}
+                    if (item.getType() == Material.ELYTRA) {
+                        continue;
+                    }
                     player.getWorld().dropItemNaturally(player.getLocation(), item);
                     player.getInventory().removeItem(item);
                 }
 
                 player.getInventory().clear();
             }
-            CoreLogic.removePlayerFromEvent(event.getPlayer().getUniqueId(), null);
+            CoreLogic.removePlayerFromEvent(event.getPlayer().getUniqueId(), null, false, true);
         }
     }
 
@@ -99,6 +117,8 @@ public class PlayerEventHandler implements Listener {
             player.teleportAsync(HungerGamesPlus2.getGameLogic().getSpawnLocation());
             player.sendMessage("§7[§3HGPlus§7]§f A game is currently running. You have been set to spectator and can join the next game when this one ends.");
             player.sendActionBar(TextComponent.fromLegacyText("You are now spectating a game"));
+            CoreLogic.bossBar.addPlayer(player);
+            CoreLogic.bossBar.setVisible(true);
             CoreLogic.lateSpectatorPlayers.add(player.getUniqueId());
         }
         else if(CoreLogic.gameStatus == -1){

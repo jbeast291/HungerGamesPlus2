@@ -15,6 +15,8 @@ import org.joml.AxisAngle4f;
 import org.joml.Vector3d;
 import org.joml.Vector3f;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Collection;
 import java.util.List;
 import java.util.Vector;
@@ -252,5 +254,10 @@ public class setup {
         for(Item currentitem : grounditems) {
             currentitem.setHealth(0);
         }
+    }
+    public String getCurrentTimeAsString(){
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
+        LocalDateTime now = LocalDateTime.now();
+        return dtf.format(now);
     }
 }
